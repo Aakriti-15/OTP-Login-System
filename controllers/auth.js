@@ -1,98 +1,113 @@
-
-const mysql = require ("mysql");
+const mysql = require("mysql");
 const jwt = require("jsonwebtoken");
-const bcrypt = require ("bcryptjs");
+const bcrypt = require("bcryptjs");
+const nodemailer = require("nodemailer");
+const axios = require("axios");
 
-
+// DB connection
 const db = mysql.createConnection({
-    host : process.env.DATABASE_HOST,
+    host: process.env.DATABASE_HOST,
     user: process.env.DATABASE_USER,
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE,
-     port: process.env.DATABASE_PORT
-}); 
+    port: process.env.DATABASE_PORT
+});
 
-
-exports.register = async(req, res)=>{
-    console.log(req.body);
-
+// REGISTER USER
+exports.register = async (req, res) => {
     const { name, email, password, passwordConfirm } = req.body;
-    
-    db.query('SELECT email from loginUser where email= ?', [email], async(error, results)=>{
-        if(error){
-            console.log(error);
+
+    db.query('SELECT email FROM loginUser WHERE email = ?', [email], async (error, results) => {
+        if (error) {
+            console.error(error);
             return res.send("Database error");
         }
-        
-        if(results.length > 0){
+
+        if (results.length > 0) {
             return res.render('login', {
                 message: 'This email is already in use.<br> Please log in below.'
-            })
-        }else if(password !== passwordConfirm){
-                return res.render('register',{
-                    message: 'Passwords do not match'
-                });
+            });
+        }
+
+        if (password !== passwordConfirm) {
+            return res.render('register', {
+                message: 'Passwords do not match'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 8);
+
+        db.query('INSERT INTO loginUser SET ?', {
+            name: name,
+            email: email,
+            password: hashedPassword
+        }, (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.send("Error during registration");
             }
-            let hashedPassword = await bcrypt.hash(password , 8)
-            console.log(hashedPassword); 
 
-db.query('insert into loginUser set ?',{name: name, email: email, password: hashedPassword }, (error,results)=>{
-if(error){
-    console.log(error);
-}
-else{
-    console.log(results);
-   return res.redirect('/login?message=registered');
-}
-})
-
-
-        
-    });
-        
-   
-}
-const nodemailer = require("nodemailer");
-
-
-// SEND OTP
-exports.sendOtp = (req, res) => {
-    const { email } = req.body;
-
-    db.query("SELECT * FROM loginUser WHERE email = ?", [email], (err, results) => {
-        if (err || results.length === 0) {
-    return res.redirect("/register?message=not_found");
-}
-
-
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        req.session.otp = otp;
-        req.session.email = email;
-
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            }
-        });
-        console.log(transporter);
-
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: "Your OTP Code",
-            text: `Your OTP for login is: ${otp}`
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log(error);
-                return res.send("Error sending OTP");
-            }
-            res.render("verify-otp", { email });
+            return res.redirect('/login?message=registered');
         });
     });
+};
+
+// SEND OTP WITH reCAPTCHA
+exports.sendOtp = async (req, res) => {
+    const { email, "g-recaptcha-response": token } = req.body;
+
+    if (!token) {
+        return res.status(400).send("reCAPTCHA token missing");
+    }
+
+    try {
+        const captchaRes = await axios.post("https://www.google.com/recaptcha/api/siteverify", null, {
+            params: {
+                secret: process.env.RECAPTCHA_SECRET_KEY,
+                response: token
+            }
+        });
+
+        if (!captchaRes.data.success) {
+            return res.status(403).send("Failed reCAPTCHA verification");
+        }
+
+        db.query("SELECT * FROM loginUser WHERE email = ?", [email], (err, results) => {
+            if (err || results.length === 0) {
+                return res.redirect("/register?message=not_found");
+            }
+
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            req.session.otp = otp;
+            req.session.email = email;
+
+            const transporter = nodemailer.createTransport({
+                service: "gmail",
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS,
+                }
+            });
+
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: "Your OTP Code",
+                text: `Your OTP for login is: ${otp}`
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error(error);
+                    return res.send("Error sending OTP");
+                }
+                res.render("verify-otp", { email });
+            });
+        });
+    } catch (err) {
+        console.error("reCAPTCHA verification failed:", err);
+        res.status(500).send("Internal Server Error");
+    }
 };
 
 // VERIFY OTP
@@ -109,7 +124,7 @@ exports.verifyOtp = (req, res) => {
             httpOnly: true
         });
 
-        return res.redirect("/dashboard"); // Change as needed
+        return res.redirect("/dashboard"); // or wherever user should land
     } else {
         return res.render("verify-otp", { message: "Invalid OTP" });
     }

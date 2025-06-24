@@ -4,7 +4,6 @@ const path = require("path");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
-
 dotenv.config({path: './.env'});
 
 const app = express();
