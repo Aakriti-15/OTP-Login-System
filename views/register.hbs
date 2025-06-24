@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <link rel="stylesheet" href="/style.css">
+
+    <title>Document</title>
+    {{!-- <style>
+        body{
+            border: 5px solid red;
+        }
+        </style> --}}
+</head>
+<body>
+    <nav> 
+        <h4>Node MySQL</h4>
+    <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+        
+    </ul>
+    </nav>
+    <div class="container mt-5">
+        <div class="card mx-auto" style="max-width:500px;">
+            
+            <div class="card-header text-center">
+
+                Register Form
+            </div>
+  
+  <div class="card-body">
+     <div id="message-box">
+  {{#if message}}
+    <div class="alert alert-danger text-center">{{message}}</div>
+  {{/if}}
+
+  {{#if success}}
+    <div class="alert alert-success text-center">{{success}}</div>
+  {{/if}}
+</div>
+
+<script>
+  // Show message from query params if not rendered from backend
+  const params = new URLSearchParams(window.location.search);
+  const msgMap = {
+    not_found: "User not found. Please register.",
+    already_exists: "This email is already in use.",
+    registered: "Registration successful. Please log in.",
+  };
+
+  if (params.has("message") && !document.querySelector("#message-box .alert")) {
+    const alert = document.createElement("div");
+    alert.className = "alert alert-info text-center";
+    alert.innerText = msgMap[params.get("message")] || "";
+    document.getElementById("message-box").appendChild(alert);
+  }
+</script>
+
+        <form action="/auth/register" method="POST" >
+        <div class="form-group mb-3">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" name="name" required />
+        </div>
+
+        <div class="form-group mb-3 ">
+            <label for="email">Email Address</label>
+            <input type="email" class="form-control" id="email" name="email" required/>
+        </div>
+
+
+        <div class="form-group mb-3">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required />
+        </div>
+
+ <div class="form-group mb-4">
+            <label for="passwordConfirm">Confirm Password</label>
+            <input type="password" class="form-control" id="passwordConfirm " name="passwordConfirm" required />
+        </div>           
+       <div class="d-flex gap-2 justify-content-between">
+        <button type="submit" class="btn btn-primary">Register User</button>
+<a href="/login" class="btn btn-outline-primary">Already Have An Account?</a>
+       </div>
+        </form>
+        </div>
+        </div>
+        </div>
+   
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+
+</body>
+</html>

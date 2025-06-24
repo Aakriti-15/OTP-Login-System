@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+     <nav> 
+        <h4>Node MySQL</h4>
+    <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+        
+    </ul>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="card mx-auto" style="max-width: 500px;">
+            <div class="card-header text-center">
+                Login with Email
+            </div>
+            <div class="card-body">
+                <div id="message-box">
+  {{#if message}}
+    <div class="alert alert-danger text-center">{{{message}}}</div>
+  
+  {{/if}}
+</div>
+
+<script>
+  // Fallback for messages via URL query
+  const params = new URLSearchParams(window.location.search);
+  const msgMap = {
+    registered: "Registration successful. Please log in.",
+    not_found: "User not found. Please register."
+  };
+
+  if (params.has("message") && !document.querySelector("#message-box .alert")) {
+    const alert = document.createElement("div");
+    alert.className = "alert alert-info text-center";
+    alert.innerText = msgMap[params.get("message")] || "";
+    document.getElementById("message-box").appendChild(alert);
+  }
+</script>
+
+
+                <form action="/auth/send-otp" method="POST">
+                    <div class="form-group mb-3">
+                        <label>Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="Enter your email" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send OTP</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
