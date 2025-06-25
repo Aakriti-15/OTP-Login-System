@@ -82,12 +82,18 @@ exports.sendOtp = async (req, res) => {
             req.session.email = email;
 
             const transporter = nodemailer.createTransport({
-                service: "gmail",
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS,
-                }
-            });
+  host: "74.125.130.109", // IP address of smtp.gmail.com
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    servername: "smtp.gmail.com", // still needed for TLS handshake
+    rejectUnauthorized: false
+  }
+});
 
             const mailOptions = {
                 from: process.env.EMAIL_USER,

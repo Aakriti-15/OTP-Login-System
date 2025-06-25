@@ -4,6 +4,9 @@ const path = require("path");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+dns.setDefaultResultOrder('ipv4first');
 dotenv.config({path: './.env'});
 
 const app = express();
@@ -16,7 +19,13 @@ app.use(session({
 
 app.use(cookieParser());
 
-
+// dns.resolve4('smtp.gmail.com', (err, addresses) => {
+//   if (err) {
+//     console.error('DNS resolution failed:', err);
+//   } else {
+//     console.log('Resolved addresses:', addresses);
+//   }
+// });
 
 const db = mysql.createConnection({
     host : process.env.DATABASE_HOST,
