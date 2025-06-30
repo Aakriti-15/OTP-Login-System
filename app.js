@@ -5,11 +5,15 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const dns = require('dns');
-dns.setServers(['8.8.8.8', '8.8.4.4']);
-dns.setDefaultResultOrder('ipv4first');
+const xlsx =require('xlsx');
+
 dotenv.config({path: './.env'});
 
 const app = express();
+
+// setup DNS (for gmail, smtp if needed)
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+dns.setDefaultResultOrder('ipv4first');
 
 app.use(session({
     secret: 'someSecretKey',
@@ -19,43 +23,24 @@ app.use(session({
 
 app.use(cookieParser());
 
-// dns.resolve4('smtp.gmail.com', (err, addresses) => {
-//   if (err) {
-//     console.error('DNS resolution failed:', err);
-//   } else {
-//     console.log('Resolved addresses:', addresses);
-//   }
-// });
 
-const db = mysql.createConnection({
-    host : process.env.DATABASE_HOST,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    database: process.env.DATABASE,
-     port: process.env.DATABASE_PORT
-}); 
-
-
+//set static folder and view engine
 const publicDirectory = path.join(__dirname, './public'); //isme we store any frontend code and you need to import it at top
-
 app.use(express.static(publicDirectory));
 app.set('view engine','hbs');
 
-db.connect((error)=> {
-if(error){
-    console.log(error)
-}else{
-    console.log("MYSQL Connected...")
-}
-})
-//define routes
 
-
-app.use(express.urlencoded({ extended: false }));
+//parse form data and JSON
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+
+//load routes
 app.use('/', require('./routes/pages'))
 app.use('/auth', require('./routes/auth'))
 
+
+//start server
 app.listen(5000, () => {
     console.log("Server is running on port 5000");
 })

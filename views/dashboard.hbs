@@ -1,13 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-    <h1>Welcome to your Dashboard</h1>
-<p>You are successfully logged in using OTP!</p>
+  <nav>
+    <h4>Node MySQL</h4>
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/login">Login</a></li>
+      <li><a href="/register">Register</a></li>
+    </ul>
+  </nav>
+
+  <div class="container mt-5">
+    <div class="card mx-auto" style="max-width: 500px;">
+      <div class="card-header text-center">Upload Excel File</div>
+      <div class="card-body">
+        
+        <div id="message-box">
+          {{#if success}}
+            <div class="alert alert-success text-center">{{success}}</div>
+          {{/if}}
+          {{#if error}}
+            <div class="alert alert-danger text-center">{{error}}</div>
+          {{/if}}
+        </div>
+
+        <form action="/upload-excel" method="POST" enctype="multipart/form-data">
+          <div class="form-group mb-3">
+            <label>Select Excel File</label>
+            <input type="file" name="excel" accept=".xlsx,.xls" class="form-control" required />
+          </div>
+          <div class="form-group mb-2">
+            <button type="submit" class="btn btn-success w-100">Upload</button>
+          </div>
+        </form>
+
+        <form action="/export-excel" method="GET">
+          <div class="form-group mb-2">
+            <button type="submit" class="btn btn-primary w-100">Export Users</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>

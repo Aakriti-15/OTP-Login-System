@@ -70,5 +70,15 @@ input[type="password"] {
 /* .g-recaptcha{
     margin: 10px 0px;
 } */
+ .form-group {
+    margin-bottom: 15px;
+}
+.card-header {
+    margin-bottom: 15px;
+}
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
 
 
