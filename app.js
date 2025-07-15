@@ -6,6 +6,15 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const dns = require('dns');
 const xlsx =require('xlsx');
+const hbs = require('hbs');
+
+hbs.registerHelper('gt',(a,b)=> a>b);
+hbs.registerHelper('lt',(a,b) => a<b);
+hbs.registerHelper('add',(a,b)=> a+b);
+hbs.registerHelper('subtract',(a,b)=>a-b);
+
+
+
 
 dotenv.config({path: './.env'});
 

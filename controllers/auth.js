@@ -119,9 +119,11 @@ exports.sendOtp = async (req, res) => {
 // VERIFY OTP
 exports.verifyOtp = (req, res) => {
     const { otp } = req.body;
+    const email =req.session.email;
 
     if (req.session.otp === otp) {
-        const token = jwt.sign({ email: req.session.email }, process.env.JWT_SECRET, {
+        req.session.userEmail = email;
+        const token = jwt.sign({ email }, process.env.JWT_SECRET, {
             expiresIn: process.env.JWT_EXPIRES_IN
         });
 

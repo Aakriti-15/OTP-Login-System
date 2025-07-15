@@ -79,6 +79,10 @@ input[type="password"] {
 body {
     font-family: 'Roboto', sans-serif;
 }
+table td {
+  font-weight: normal;
+}
+
 
 
 

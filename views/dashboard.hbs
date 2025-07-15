@@ -20,9 +20,10 @@
 
   <div class="container mt-5">
     <div class="card mx-auto" style="max-width: 500px;">
-      <div class="card-header text-center">Upload Excel File</div>
+  
       <div class="card-body">
-        
+
+        <!-- Flash messages -->
         <div id="message-box">
           {{#if success}}
             <div class="alert alert-success text-center">{{success}}</div>
@@ -32,25 +33,55 @@
           {{/if}}
         </div>
 
-        <form action="/upload-excel" method="POST" enctype="multipart/form-data">
-          <div class="form-group mb-3">
-            <label>Select Excel File</label>
-            <input type="file" name="excel" accept=".xlsx,.xls" class="form-control" required />
-          </div>
-          <div class="form-group mb-2">
-            <button type="submit" class="btn btn-success w-100">Upload</button>
-          </div>
-        </form>
+        {{#if admin}}
+    <div class="card-header text-center">USER LIST</div>
 
-        <form action="/export-excel" method="GET">
-          <div class="form-group mb-2">
-            <button type="submit" class="btn btn-primary w-100">Export Users</button>
+          <!-- Admin view -->
+          {{!-- <h3 class="text-center">User List (Admin)</h3> --}}
+          <table class="table table-striped">
+            <thead><tr><th>Name</th><th>Email</th></tr></thead>
+            <tbody>
+              {{#each users}}
+                <tr><td>{{this.name}}</td><td>{{this.email}}</td></tr>
+              {{/each}}
+            </tbody>
+          </table>
+
+          <!-- Pagination -->
+          <div class="d-flex justify-content-between">
+            {{#if (gt page 1)}}
+              <a href="/dashboard?page={{subtract page 1}}" class="btn btn-primary">Previous</a>
+            {{/if}}
+            {{#if (lt page totalPages)}}
+              <a href="/dashboard?page={{add page 1}}" class="btn btn-primary">Next</a>
+            {{/if}}
           </div>
-        </form>
+
+        {{else}}
+    <div class="card-header text-center">UPLOAD</div>
+          <!-- Normal user view -->
+          <h5 class="text-success text-center mb-3">Hi <span class ="fw-semibold">{{email}}</span>, welcome to the dashboard!</h5>
+
+          <form action="/upload-excel" method="POST" enctype="multipart/form-data">
+            <div class="form-group mb-3">
+              <label>Select Excel File</label>
+              <input type="file" name="excel" accept=".xlsx,.xls" class="form-control" required />
+            </div>
+            <div class="form-group mb-2">
+              <button type="submit" class="btn btn-success w-100">Upload</button>
+            </div>
+          </form>
+
+          <form action="/export-excel" method="GET">
+            <div class="form-group mb-2">
+              <button type="submit" class="btn btn-primary w-100">Export Users</button>
+            </div>
+          </form>
+
+        {{/if}}
 
       </div>
     </div>
   </div>
-
 </body>
 </html>

@@ -20,9 +20,7 @@ router.get('/verify-otp', (req,res)=>{
     res.render('verify-otp');
 })
 
- router.get("/dashboard", (req, res) => {
-    res.render("dashboard"); 
- });
+ 
 
 router.get("/more",(req,res)=> {
     res.render("more");
@@ -85,4 +83,42 @@ router.get('/export-excel',(req,res)=>{
         res.send(buffer);
     });
 });
+
+
+router.get("/dashboard", (req, res) => {
+    const userEmail = req.session.userEmail;
+    if(!userEmail) return res.redirect('/login');
+
+    if(userEmail === process.env.AUTH_GMAIL){
+        const page = parseInt(req.query.page) || 1
+        const limit = 10
+        const offset = (page - 1)*limit;
+
+        db.query('select * from loginuser limit ? offset ?',[limit,offset],(err, result)=>{
+            if(err) return req.render('dashboard',{error: 'DB error', success: null});
+
+
+        db.query('select count(*) as total from loginuser',(countErr, countResult)=>{
+            const totalPages = Math.ceil(countResult[0].total / limit);
+            res.render('dashboard',{
+                admin:true,
+                users: result,
+                page,
+                totalPages,
+                email: userEmail
+            })
+        })//for authorization of particular gmail
+        })
+
+    }else{
+        res.render('dashboard',{
+            admin:false,
+            email:userEmail,
+            success:null,
+            error:null
+        })
+    }
+ });
+
 module.exports= router;
+
