@@ -120,7 +120,7 @@ exports.sendOtp = async (req, res) => {
 exports.verifyOtp = (req, res) => {
     const { otp } = req.body;
     const email =req.session.email;
-
+   req.session.user ={email:email};
     if (req.session.otp === otp) {
         req.session.userEmail = email;
         const token = jwt.sign({ email }, process.env.JWT_SECRET, {

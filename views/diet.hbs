@@ -1,0 +1,17 @@
+<h2>Choose Your Goal</h2>
+<form method ="POST">
+    <select name = "goal">
+        <option value="weight_loss">Weight Loss</option>
+        <option value = "reduce_cramps">Reduce Cramps</option>
+        </select>
+        <button type=" submit">Generate Plan</button>
+        </form>
+
+        {{#if plan}}
+        <h3>Your Diet Plan:</h3>
+        <ul>
+            {{#each plan}}
+            <li>{{this}}</li>
+            {{/each}}
+            </ul>
+            {{/if}}

@@ -1,124 +1,150 @@
-const express = require('express')
+const express = require('express');
 const router = express.Router();
 const upload = require('../upload');
 const xlsx = require('xlsx');
+const bcrypt = require('bcryptjs');
+const path = require('path');
 const db = require('../db');
-const bcrypt= require('bcryptjs');
-router.get('/', (req,res)=>{
-    res.render('index');
+
+// Home & static pages
+router.get('/', (req, res) => res.render('index'));
+router.get('/register', (req, res) => res.render('register'));
+router.get('/login', (req, res) => {
+  const message = req.query.message;
+  let displayMessage = null;
+
+  if (message === 'login_required') {
+    displayMessage = "Please log in to continue.";
+  } else if (message === 'registered') {
+    displayMessage = "Registration successful. Please log in.";
+  } else if (message === 'not_found') {
+    displayMessage = "User not found. Please register.";
+  }
+
+  res.render('login', { message: displayMessage });
 });
 
-router.get('/register', (req,res)=>{
-    res.render('register');
+router.get('/verify-otp', (req, res) => res.render('verify-otp'));
+router.get('/more', (req, res) => res.render('more'));
+
+// Auth check before tracker
+router.get('/tracker', (req, res) => {
+  if (!req.session.userEmail) {
+    return res.redirect('/login?message=login_required');
+  }
+  res.render('tracker');
 });
 
-router.get('/login', (req,res)=>{
-    res.render('login');
-});
+// Dashboard
+router.get('/dashboard', (req, res) => {
+  const userEmail = req.session.userEmail;
+  if (!userEmail) return res.redirect('/login?message=login_required');
 
-router.get('/verify-otp', (req,res)=>{
-    res.render('verify-otp');
-})
+  // ADMIN view
+  if (userEmail === process.env.AUTH_GMAIL) {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const offset = (page - 1) * limit;
 
- 
+    db.query('SELECT * FROM loginuser LIMIT ? OFFSET ?', [limit, offset], (err, users) => {
+      if (err) return res.render('dashboard', { error: 'DB error', success: null });
 
-router.get("/more",(req,res)=> {
-    res.render("more");
-});
-
-// this file is rendering to different routes based on ki kaha pe request to direct krna h
-
-router.post('/upload-excel' , upload.single('excel'), (req, res)=>{
-    // try{
-        
-        
-        const workbook = xlsx.read(req.file.buffer, {type:'buffer'});
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        
-        const data = xlsx.utils.sheet_to_json(sheet);
-        console.log("Parsed Data",data);
-       
-         
-        if(data.length===0){
-            return res.render('dashboard',{error : 'Excel file is empty', success : null});
-        }
-
-        data.forEach((row)=>{
-            const{name,email,password}= row;
-          const hashedPassword=bcrypt.hashSync(String(password), 10)
-          console.log('Row', row);
-    if(name && email && password){
-                db.query('insert into loginuser (name,email,password) values(?,?,?)',[name,email,hashedPassword], (err)=>{
-                    if(err){
-                    console.error(err)
-                    }
-                });
-            }
+      db.query('SELECT COUNT(*) AS total FROM loginuser', (countErr, countResult) => {
+        const totalPages = Math.ceil(countResult[0].total / limit);
+        res.render('dashboard', {
+          admin: true,
+          users,
+          page,
+          totalPages,
+          email: userEmail
         });
-        res.render('dashboard',{error : null, success : 'Excel file uploaded successfully'});
-    } //catch(err){
-    //    console.log("❌ Catch Error:", err);  // This will now print the actual error
-    // res.render('dashboard', {
-    //   success: null,
-    //   error: 'Upload failed: ' + (err?.message || 'Something went wrong')
-    // }); 
-    // }
-);
-
-
-router.get('/export-excel',(req,res)=>{
-    db.query('select name, email from loginuser',(err,results)=>{
-        if(err){
-            console.error('DB error',err);
-            return res.status(500).send('failed to fetch data');
-        }
-        const worksheet =xlsx.utils.json_to_sheet(results);
-        const workbook = xlsx.utils.book_new();
-        xlsx.utils.book_append_sheet(workbook,worksheet,'Users');
-        const buffer = xlsx.write(workbook,{type:'buffer', booktype:'xlsx'});
-
-        res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-
-        res.send(buffer);
+      });
     });
+
+  } else {
+    // NORMAL user view
+    db.query('SELECT original_name, upload_time FROM uploaded_files WHERE email = ?', [userEmail], (err, results) => {
+      res.render('dashboard', {
+        admin: false,
+        email: userEmail,
+        success: null,
+        error: null,
+        files: results || []
+      });
+    });
+  }
 });
 
+// Upload Excel or PDF/Image
+router.post('/upload-file', upload.single('file'), (req, res) => {
+  const userEmail = req.session.userEmail;
+  if (!userEmail) return res.redirect('/login?message=login_required');
 
-router.get("/dashboard", (req, res) => {
-    const userEmail = req.session.userEmail;
-    if(!userEmail) return res.redirect('/login');
+  if (!req.file) {
+    return res.render('dashboard', {
+      admin: false,
+      email: userEmail,
+      error: 'No file uploaded',
+      success: null,
+      files: []
+    });
+  }
 
-    if(userEmail === process.env.AUTH_GMAIL){
-        const page = parseInt(req.query.page) || 1
-        const limit = 10
-        const offset = (page - 1)*limit;
+  const { originalname, path: filePath } = req.file;
+  const ext = path.extname(originalname).toLowerCase();
 
-        db.query('select * from loginuser limit ? offset ?',[limit,offset],(err, result)=>{
-            if(err) return req.render('dashboard',{error: 'DB error', success: null});
+  // If Excel, parse and insert data
+  if (ext === '.xlsx' || ext === '.xls') {
+    try {
+      const wb = xlsx.readFile(filePath);
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const data = xlsx.utils.sheet_to_json(sheet);
+      if (!data.length) {
+        return res.render('dashboard', {
+          admin: false,
+          email: userEmail,
+          error: 'Excel is empty',
+          success: null,
+          files: []
+        });
+      }
 
+      data.forEach(row => {
+        const { name, email, password } = row;
+        if (name && email && password) {
+          const hashed = bcrypt.hashSync(password, 10);
+          db.query('INSERT INTO loginuser (name, email, password) VALUES (?, ?, ?)', [name, email, hashed]);
+        }
+      });
 
-        db.query('select count(*) as total from loginuser',(countErr, countResult)=>{
-            const totalPages = Math.ceil(countResult[0].total / limit);
-            res.render('dashboard',{
-                admin:true,
-                users: result,
-                page,
-                totalPages,
-                email: userEmail
-            })
-        })//for authorization of particular gmail
-        })
-
-    }else{
-        res.render('dashboard',{
-            admin:false,
-            email:userEmail,
-            success:null,
-            error:null
-        })
+    } catch (err) {
+      console.error('Excel parse error', err);
+      return res.render('dashboard', {
+        admin: false,
+        email: userEmail,
+        error: 'Failed to process Excel',
+        success: null,
+        files: []
+      });
     }
- });
+  }
 
-module.exports= router;
+  // Save file metadata
+  db.query('INSERT INTO uploaded_files (email, original_name, file_path) VALUES (?, ?, ?)',
+    [userEmail, originalname, filePath], (err) => {
+      if (err) console.error('Logging error:', err);
+    });
 
+  // Show updated dashboard
+  db.query('SELECT original_name, upload_time FROM uploaded_files WHERE email = ?', [userEmail], (err, results) => {
+    res.render('dashboard', {
+      admin: false,
+      email: userEmail,
+      success: 'File uploaded successfully',
+      error: null,
+      files: results || []
+    });
+  });
+});
+
+module.exports = router;

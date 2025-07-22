@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Doctor Consultation</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+ <nav>
+  <h4>Wellness App</h4>
+  <ul>
+    <li><a href="/">Home</a></li>
+
+    {{#if user}}
+      <li><a href="/tracker">Symptom Tracker</a></li>
+      <li><a href="/consult">Consult a Doctor</a></li>
+      <li><a href="/grocery">Generate Grocery List</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/auth/logout">Logout</a></li>
+    {{else}}
+      <li><a href="/login">Login</a></li>
+      <li><a href="/register">Register</a></li>
+    {{/if}}
+  </ul>
+</nav>
+
+
+  <div class="container mt-5">
+    <div class="card mx-auto" style="max-width: 600px;">
+      <div class="card-header text-center">
+        Book a Doctor Consultation
+      </div>
+      <div class="card-body">
+
+        <form method="POST">
+          <div class="form-group mb-3">
+            <label for="doctor">Select Doctor:</label>
+            <select name="doctor" class="form-control" required>
+              <option value="Dr. Nidhi Sharma">Dr. Nidhi Sharma (Gynecologist)</option>
+              <option value="Dr. Meena Gupta">Dr. Meena Gupta (Nutritionist)</option>
+              <option value="Dr. Riya Patel">Dr. Riya Patel (Endocrinologist)</option>
+            </select>
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="reason">Your Concern:</label>
+            <textarea name="reason" class="form-control" rows="4" placeholder="Describe your symptoms or concerns" required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-success w-100">Submit Request</button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  {{#if requests}}
+  <div class="container mt-4">
+    <div class="card mx-auto" style="max-width: 700px;">
+      <div class="card-header text-center">
+        Your Previous Requests
+      </div>
+      <ul class="list-group list-group-flush">
+        {{#each requests}}
+          <li class="list-group-item">
+            <strong>Date:</strong> {{this.date}} <br>
+            <strong>Doctor:</strong> {{this.doctor}} <br>
+            <strong>Concern:</strong> {{this.reason}}
+          </li>
+        {{/each}}
+      </ul>
+    </div>
+  </div>
+  {{/if}}
+
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Grocery List</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav>
+  <h4>Wellness App</h4>
+  <ul>
+    <li><a href="/">Home</a></li>
+
+    {{#if user}}
+      <li><a href="/tracker">Symptom Tracker</a></li>
+      <li><a href="/consult">Consult a Doctor</a></li>
+      <li><a href="/grocery">Generate Grocery List</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/auth/logout">Logout</a></li>
+    {{else}}
+      <li><a href="/login">Login</a></li>
+      <li><a href="/register">Register</a></li>
+    {{/if}}
+  </ul>
+</nav>
+
+
+  <div class="container mt-5">
+    <div class="card mx-auto" style="max-width: 500px;">
+      <div class="card-header text-center">
+        PCOD-Friendly Grocery List
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="form-group mb-3">
+            <label>Select items to add (comma-separated):</label>
+            <input type="text" name="items" class="form-control" placeholder="e.g., Flax seeds, Oats, Green tea" required />
+          </div>
+          <button type="submit" class="btn btn-success w-100">Save List</button>
+        </form>
+        {{#if latestList}}
+<hr>
+<h4 class="mt-4">Your Grocery List:</h4>
+<form id="checkbox-form">
+  <ul class="list-group mb-3">
+    {{#each latestList}}
+      <li class="list-group-item">
+        <input type="checkbox" class="form-check-input me-2" />
+        {{this}}
+      </li>
+    {{/each}}
+  </ul>
+  <button type="button" class="btn btn-outline-primary" onclick="window.print()">🖨️ Print List</button>
+</form>
+{{/if}}
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

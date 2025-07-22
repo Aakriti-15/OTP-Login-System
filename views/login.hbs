@@ -1,65 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script> 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script> 
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
 </head>
+
 <body>
-     <nav> 
-        <h4>Node MySQL</h4>
-    <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/login">Login</a></li>
-        <li><a href="/register">Register</a></li>
-        
-    </ul>
-    </nav>
+ <nav>
+  <h4>Wellness App</h4>
+  <ul>
+    <li><a href="/">Home</a></li>
 
-    <div class="container mt-5">
-        <div class="card mx-auto" style="max-width: 500px;">
-            <div class="card-header text-center">
-                Login with Email
-            </div>
-            <div class="card-body">
-                <div id="message-box">
-  {{#if message}}
-    <div class="alert alert-danger text-center">{{{message}}}</div>
-  
-  {{/if}}
-</div>
-
-<script>
-  // Fallback for messages via URL query
-  const params = new URLSearchParams(window.location.search);
-  const msgMap = {
-    registered: "Registration successful. Please log in.",
-    not_found: "User not found. Please register."
-  };
-
-  if (params.has("message") && !document.querySelector("#message-box .alert")) {
-    const alert = document.createElement("div");
-    alert.className = "alert alert-info text-center";
-    alert.innerText = msgMap[params.get("message")] || "";
-    document.getElementById("message-box").appendChild(alert);
-  }
-</script>
+    {{#if user}}
+      <li><a href="/tracker">Symptom Tracker</a></li>
+      <li><a href="/consult">Consult a Doctor</a></li>
+      <li><a href="/grocery">Generate Grocery List</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/auth/logout">Logout</a></li>
+    {{else}}
+      <li><a href="/login">Login</a></li>
+      <li><a href="/register">Register</a></li>
+    {{/if}}
+  </ul>
+</nav>
 
 
-                <form action="/auth/send-otp" method="POST">
-                    <div class="form-group mb-3">
-                        <label>Email</label>
-                        <input type="email" name="email" class="form-control" placeholder="Enter your email" required />
-                    </div>
-                      <div class="g-recaptcha" data-sitekey="6LeC9GsrAAAAANrhCOIpvu-7zgWsXa9GGwss1UG8"></div> 
-                    <button type="submit" class="btn btn-primary">Send OTP</button>
-                </form>
-            </div>
+  <div class="container mt-5">
+    <div class="card mx-auto" style="max-width: 500px;">
+      <div class="card-header text-center">
+        Login with Email
+      </div>
+
+      <div class="card-body">
+
+        <!-- Server-side message from backend -->
+        <div id="message-box">
+          {{#if message}}
+            <div class="alert alert-danger text-center">{{{message}}}</div>
+          {{/if}}
         </div>
+
+        <!-- Fallback for messages via URL query -->
+        <div id="query-message-box"></div>
+        <script>
+          const params = new URLSearchParams(window.location.search);
+          const msgMap = {
+            registered: "Registration successful. Please log in.",
+            not_found: "User not found. Please register.",
+            login_required: "Please log in to use the symptom tracker.",
+            invalid: "Invalid OTP. Please try again.",
+            expired: "OTP expired. Request again."
+          };
+
+          if (params.has("message")) {
+            const key = params.get("message");
+            const msg = msgMap[key];
+            if (msg) {
+              const alert = document.createElement("div");
+              alert.className = "alert alert-info text-center mt-2";
+              alert.innerText = msg;
+              document.getElementById("query-message-box").appendChild(alert);
+            }
+          }
+        </script>
+
+        <!-- Login form -->
+        <form action="/auth/send-otp" method="POST">
+          <div class="form-group mb-3">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" placeholder="Enter your email" required />
+          </div>
+
+          <div class="g-recaptcha mb-3" data-sitekey="6LeC9GsrAAAAANrhCOIpvu-7zgWsXa9GGwss1UG8"></div>
+
+          <button type="submit" class="btn btn-primary w-100">Send OTP</button>
+
+          <div class="text-center mt-3">
+            <a href="/register" class="btn btn-outline-primary">Not registered? Create an account</a>
+          </div>
+        </form>
+
+      </div>
     </div>
+  </div>
 </body>
 </html>
